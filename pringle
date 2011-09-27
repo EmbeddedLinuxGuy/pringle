@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+
+import httplib2
+import urllib
+import sys, os
+
+url = "http://developer.echonest.com/api/v4/song/identify"
+
+def getApiKey():
+    try:
+        return os.environ["ECHONEST_KEY"]
+    except KeyError:
+        pass
+
+    try:
+        apifile = os.environ["HOME"]+"/.config/pringle/apikey.txt"
+        with open(apifile, "r") as f:
+            return f.read()
+    except IOError:
+        print "Please set ECHONEST_KEY in your environment or create "+apifile
+        sys.exit(0)
+
+def makeHttp():
+    return httplib2.Http()
+
+def assert_status(r, status, c):
+  if r.status != status:
+    print "Status: " + str(r.status)
+    print "Content-type: " + str(r['content-type'])
+    print "Content=="
+    print c
+    print "==Content"
+    sys.exit(1)
+
+def main():
+    http = makeHttp()
+    headers = {'Content-type': 'application/x-www-form-urlencoded'}
+    body = {}
+    body["api_key"] = getApiKey()
+
+    body["query"] = '{"metadata":{"artist":"The Velvet Underground", "release":"Loaded", "title":"Rock And Roll", "genre":"Rock", "bitrate":192,"sample_rate":44100, "duration":284, "filename":"The Velvet Underground-03-Rock And Roll.mp3", "samples_decoded":220598, "given_duration":10, "start_offset":10, "version":3.15, "codegen_time":1.748051, "decode_time":0.906163}, "code_count":46, "code":"eJwlkscVxDAIRFsiKZWDEPRfwg7ey5c1pBHPJIuIZCVw-uv0lwdwHYjGm0B-6GgZkZIATA1oKg1FstoGRmN2dHXebnR77fbqnXcR1ui814GeodmdE8P1m1FINtoNaMYNQa31IBuosNno9nY-dKDd20WDeWwVFYuxDy6ZZQcieZ77xHQvPHIWMyeHJ-5mC2LN5McsQfdd3HHi1VNv4gy82LMwBPkx701IycUuPG6LemyPGdgb54CI9GvrGFfN64_VedVz1FTuUYWSVeWsPDC3SopjtA8_NxYPrN7_Nt897kdn2po5xQ4EftjYEQi6qS5EVcpvjdsiIOp4whDh5i3b2CjcLIiHhNuihbco9x3tv6DCa1oIuRZE7GbLruDD8EQu_qaN8B89kpFB", "tag":0, "low_rank":0}'
+
+    r, c = http.request(url, "POST", headers=headers, body=urllib.urlencode(body))
+    assert_status(r, 200, c)
+    print c
+
+if __name__ == '__main__':
+    main()
